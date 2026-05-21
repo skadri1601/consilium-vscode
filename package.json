@@ -1,0 +1,206 @@
+{
+  "name": "@consilium/vscode-extension",
+  "displayName": "Consilium - Multi-AI Council",
+  "description": "Run multi-AI debates across OpenAI, Anthropic, Google, Groq, xAI, Moonshot, and OpenRouter - directly in VS Code or Cursor. Right-click code to debate, get structured edits, see live convergence.",
+  "version": "0.1.0",
+  "publisher": "myconsilium",
+  "private": false,
+  "license": "MIT",
+  "icon": "media/consilium-icon.png",
+  "galleryBanner": {
+    "color": "#0a0a0a",
+    "theme": "dark"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "AI",
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "council",
+    "multi-agent",
+    "debate",
+    "deliberation",
+    "openai",
+    "anthropic",
+    "claude",
+    "gpt",
+    "gemini",
+    "code review",
+    "cursor"
+  ],
+  "homepage": "https://github.com/skadri1601/consilium-vscode#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/skadri1601/consilium-vscode.git"
+  },
+  "bugs": {
+    "url": "https://github.com/skadri1601/consilium-vscode/issues"
+  },
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "consilium.debate",
+        "title": "Consilium: Debate a topic",
+        "category": "Consilium"
+      },
+      {
+        "command": "consilium.debateSelection",
+        "title": "Consilium: Debate selected code",
+        "category": "Consilium"
+      },
+      {
+        "command": "consilium.debateFile",
+        "title": "Consilium: Debate this file",
+        "category": "Consilium"
+      },
+      {
+        "command": "consilium.debateStaged",
+        "title": "Consilium: Review staged changes",
+        "category": "Consilium"
+      },
+      {
+        "command": "consilium.debateFailing",
+        "title": "Consilium: Debate the failing test output",
+        "category": "Consilium"
+      },
+      {
+        "command": "consilium.applyEdits",
+        "title": "Consilium: Apply edits from latest synthesis",
+        "category": "Consilium"
+      },
+      {
+        "command": "consilium.openHistory",
+        "title": "Consilium: Open debate history",
+        "category": "Consilium"
+      },
+      {
+        "command": "consilium.signIn",
+        "title": "Consilium: Sign in",
+        "category": "Consilium"
+      },
+      {
+        "command": "consilium.signOut",
+        "title": "Consilium: Sign out",
+        "category": "Consilium"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "editorHasSelection",
+          "command": "consilium.debateSelection",
+          "group": "1_modification@10"
+        },
+        {
+          "when": "!editorHasSelection",
+          "command": "consilium.debateFile",
+          "group": "1_modification@11"
+        }
+      ],
+      "scm/title": [
+        {
+          "command": "consilium.debateStaged",
+          "group": "navigation",
+          "when": "scmProvider == git"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "consilium",
+          "title": "Consilium",
+          "icon": "media/activity-bar-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "consilium": [
+        {
+          "id": "consilium.debatePanel",
+          "name": "Live Debate",
+          "type": "webview"
+        },
+        {
+          "id": "consilium.history",
+          "name": "Recent Debates",
+          "type": "tree"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Consilium",
+      "properties": {
+        "consilium.apiUrl": {
+          "type": "string",
+          "default": "https://api.myconsilium.xyz",
+          "description": "Consilium API base URL. Override for self-hosted or local development."
+        },
+        "consilium.defaultMode": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "quick",
+            "council",
+            "deep",
+            "blind",
+            "redteam",
+            "jury",
+            "market"
+          ],
+          "default": "auto",
+          "description": "Default deliberation mode for the 'Debate' commands."
+        },
+        "consilium.defaultModels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Default model IDs (empty = council picks based on tier). Example: [\"claude-sonnet-4-6\", \"gpt-5.4\", \"gemini-3.1-pro-preview\"]"
+        },
+        "consilium.toolsEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Expose Read/Edit/Grep/Bash tools to the council during debate. Disable for fully sandboxed runs."
+        },
+        "consilium.autoAttachGitContext": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-attach the current branch + uncommitted diff + recent commits to every debate inside a git repo."
+        },
+        "consilium.testCommand": {
+          "type": "string",
+          "default": "",
+          "description": "Override the test command used by 'Debate the failing test output'. Defaults to auto-detection (pnpm/npm/pytest/cargo/go)."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs --production",
+    "watch": "node esbuild.mjs --watch",
+    "package": "vsce package --no-dependencies",
+    "publish:vscode": "vsce publish --no-dependencies",
+    "publish:openvsx": "ovsx publish --no-dependencies",
+    "type-check": "echo 'vscode extension requires separate npm install; skipping'",
+    "vscode:prepublish": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/vscode": "^1.118.0",
+    "@vscode/vsce": "^3.9.1",
+    "esbuild": "^0.28.0",
+    "ovsx": "^0.10.11",
+    "typescript": "^5.9.3"
+  }
+}
