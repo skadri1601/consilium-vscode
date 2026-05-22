@@ -134,6 +134,34 @@ export class ConsiliumApiClient {
     if (!res.ok && res.status !== 404) throw await asError(res, "cancelDebate");
   }
 
+  async createSession(name?: string): Promise<{ id: string; title: string }> {
+    const title = (
+      name && name.trim().length > 0 ? name : "VS Code Session"
+    ).slice(0, 200);
+    const res = await fetch(`${this.apiUrl}/api/v1/v2/conversations`, {
+      method: "POST",
+      headers: await this.headers(),
+      body: JSON.stringify({ title }),
+    });
+    if (!res.ok) throw await asError(res, "createSession");
+    return (await res.json()) as { id: string; title: string };
+  }
+
+  async appendDebateToSession(
+    sessionId: string,
+    debateId: string,
+  ): Promise<void> {
+    const res = await fetch(
+      `${this.apiUrl}/api/v1/v2/conversations/${sessionId}/debates`,
+      {
+        method: "POST",
+        headers: await this.headers(),
+        body: JSON.stringify({ debateId }),
+      },
+    );
+    if (!res.ok) throw await asError(res, "appendDebateToSession");
+  }
+
   async listDebates(
     opts: { limit?: number; search?: string } = {},
   ): Promise<DebateSummary[]> {

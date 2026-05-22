@@ -47,11 +47,39 @@ export async function runDebate(
   const ac = new AbortController();
   const cancelDisposable = registerCancelButton(() => ac.abort());
 
+  let canceled = false;
   try {
     await streamAndDispatch(client, panel, debate.id, ac, toolsEnabled);
+  } catch (err) {
+    if (ac.signal.aborted) canceled = true;
+    throw err;
   } finally {
     cancelDisposable.dispose();
   }
+
+  if (!canceled && !ac.signal.aborted) {
+    await persistDebateToSession(client, debate.id, input.topic).catch(
+      (err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        const channel = vscode.window.createOutputChannel("Consilium");
+        channel.appendLine(
+          `[session-sync] Failed to persist debate ${debate.id}: ${msg}`,
+        );
+        vscode.window.showWarningMessage(
+          `Debate completed but failed to save to session: ${msg}`,
+        );
+      },
+    );
+  }
+}
+
+async function persistDebateToSession(
+  client: ConsiliumApiClient,
+  debateId: string,
+  topic: string,
+): Promise<void> {
+  const session = await client.createSession(topic.slice(0, 60));
+  await client.appendDebateToSession(session.id, debateId);
 }
 
 async function buildDebateOptions(
